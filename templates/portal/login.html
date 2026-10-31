@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Log In - DoubtDesk{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card p-4 p-md-5 border-0 shadow-sm bg-white">
+            
+            <div class="text-center mb-3">
+                <div class="bg-primary-subtle text-primary d-inline-flex p-3 rounded-circle mb-3 fs-3" id="roleIcon">
+                    <i class="bi bi-mortarboard"></i>
+                </div>
+                <h3 class="fw-bold mb-1">Welcome Back</h3>
+                <p class="text-muted small mb-0">Sign in to your account</p>
+            </div>
+
+            <!-- Role Selector Tabs -->
+            <ul class="nav nav-pills nav-fill mb-3 bg-light p-1 rounded-pill" id="roleTabs">
+                <li class="nav-item">
+                    <button class="nav-link active rounded-pill py-2 small fw-semibold" id="tabStudent" type="button" onclick="switchRole('student')">
+                        <i class="bi bi-mortarboard me-1"></i> Student Login
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link rounded-pill py-2 small fw-semibold text-secondary" id="tabTeacher" type="button" onclick="switchRole('teacher')">
+                        <i class="bi bi-person-workspace me-1"></i> Teacher Login
+                    </button>
+                </li>
+            </ul>
+
+            <form method="post" action="{% url 'student_login' %}" target="_blank" novalidate id="loginForm">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger py-2 small">
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small" id="idLabel">Student Roll Number</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-card-heading"></i></span>
+                        {{ form.roll_number }}
+                    </div>
+                    {% if form.roll_number.errors %}
+                        <div class="text-danger small mt-1">{{ form.roll_number.errors.0 }}</div>
+                    {% endif %}
+                    <div class="form-text small" id="idHint">e.g. <code>323136410112</code></div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold small">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        {{ form.password }}
+                    </div>
+                    {% if form.password.errors %}
+                        <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn btn-primary w-100 py-2 rounded-pill fw-semibold shadow-sm">
+                    <i class="bi bi-door-open me-1"></i>
+                    <span id="btnText">Log In as Student</span>
+                </button>
+            </form>
+
+            <div class="mt-4 pt-3 border-top text-center">
+                <p class="text-muted small mb-2">Don't have an account yet?</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="{% url 'student_register' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                        <i class="bi bi-mortarboard me-1"></i> Student Sign Up
+                    </a>
+                    <a href="{% url 'teacher_register' %}" class="btn btn-sm btn-outline-warning text-dark rounded-pill px-3">
+                        <i class="bi bi-person-workspace me-1"></i> Teacher Sign Up
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+const studentLoginUrl = "{% url 'student_login' %}";
+const teacherLoginUrl = "{% url 'teacher_login' %}";
+
+function switchRole(role) {
+    const tabStudent = document.getElementById('tabStudent');
+    const tabTeacher = document.getElementById('tabTeacher');
+    const idLabel = document.getElementById('idLabel');
+    const idHint = document.getElementById('idHint');
+    const btnText = document.getElementById('btnText');
+    const submitBtn = document.getElementById('submitBtn');
+    const roleIcon = document.getElementById('roleIcon');
+    const loginForm = document.getElementById('loginForm');
+    const rollInput = document.querySelector('input[name="roll_number"]');
+
+    if (role === 'teacher') {
+        loginForm.action = teacherLoginUrl;
+        tabTeacher.classList.add('active', 'bg-warning', 'text-dark');
+        tabTeacher.classList.remove('text-secondary');
+        tabStudent.classList.remove('active', 'bg-primary');
+        tabStudent.classList.add('text-secondary');
+
+        idLabel.textContent = "Teacher ID / Roll Number";
+        idHint.innerHTML = "e.g. <code>T101</code> or faculty ID";
+        btnText.textContent = "Log In as Teacher";
+        submitBtn.className = "btn btn-warning text-dark w-100 py-2 rounded-pill fw-semibold shadow-sm";
+        roleIcon.className = "bg-warning-subtle text-warning-emphasis d-inline-flex p-3 rounded-circle mb-3 fs-3";
+        roleIcon.innerHTML = '<i class="bi bi-person-workspace"></i>';
+        if (rollInput && !rollInput.value) {
+            rollInput.placeholder = "Enter Teacher ID (e.g. T101)";
+        }
+    } else {
+        loginForm.action = studentLoginUrl;
+        tabStudent.classList.add('active');
+        tabStudent.classList.remove('text-secondary');
+        tabTeacher.classList.remove('active', 'bg-warning', 'text-dark');
+        tabTeacher.classList.add('text-secondary');
+
+        idLabel.textContent = "Student Roll Number";
+        idHint.innerHTML = "e.g. <code>323136410112</code>";
+        btnText.textContent = "Log In as Student";
+        submitBtn.className = "btn btn-primary w-100 py-2 rounded-pill fw-semibold shadow-sm";
+        roleIcon.className = "bg-primary-subtle text-primary d-inline-flex p-3 rounded-circle mb-3 fs-3";
+        roleIcon.innerHTML = '<i class="bi bi-mortarboard"></i>';
+        if (rollInput && !rollInput.value) {
+            rollInput.placeholder = "Enter Roll Number (e.g. 323136410112)";
+        }
+    }
+}
+
+// Initialize based on active_role context if provided
+{% if active_role == 'teacher' %}
+switchRole('teacher');
+{% endif %}
+</script>
+{% endblock %}

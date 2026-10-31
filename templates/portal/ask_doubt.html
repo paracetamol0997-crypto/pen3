@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Ask a Doubt - DoubtDesk{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card p-4 p-md-5 border-0 shadow-sm bg-white">
+            <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+                <div>
+                    <h3 class="fw-bold mb-1"><i class="bi bi-patch-question-fill text-primary me-2"></i>Ask a Doubt</h3>
+                    <p class="text-muted small mb-0">Select your subject and write your doubt clearly so your teacher can assist you.</p>
+                </div>
+                <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger py-2 small">
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Choose Subject <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-book"></i></span>
+                        {{ form.subject }}
+                    </div>
+                    {% if form.subject.errors %}
+                        <div class="text-danger small mt-1">{{ form.subject.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Doubt Summary / Title <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-type-h1"></i></span>
+                        {{ form.title }}
+                    </div>
+                    {% if form.title.errors %}
+                        <div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>
+                    {% endif %}
+                    <div class="form-text small">e.g. "How does binary search achieve O(log n) time complexity?"</div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold small">Detailed Description <span class="text-danger">*</span></label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+                    {% endif %}
+                    <div class="form-text small">Explain your doubt in detail, including what you have tried or where you are stuck.</div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'student_dashboard' %}" class="btn btn-light rounded-pill px-4">Cancel</a>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-semibold shadow-sm">
+                        <i class="bi bi-send-fill me-1"></i> Post Doubt
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ doubt.title }} - DoubtDesk{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+
+        <div class="mb-3">
+            {% if user.role == 'student' %}
+                <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                    <i class="bi bi-arrow-left me-1"></i> Back to My Doubts
+                </a>
+            {% else %}
+                <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Teacher Dashboard
+                </a>
+            {% endif %}
+        </div>
+
+        <!-- Student Doubt Card -->
+        <div class="card p-4 p-md-5 mb-4 bg-white border-0 shadow-sm">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="badge bg-primary px-3 py-2 rounded-pill">
+                        <i class="bi bi-book-half me-1"></i> {{ doubt.subject.name }}
+                    </span>
+                    {% if doubt.status == 'answered' %}
+                        <span class="badge badge-answered px-3 py-2 rounded-pill">
+                            <i class="bi bi-check-circle-fill me-1"></i> Resolved / Answered
+                        </span>
+                    {% else %}
+                        <span class="badge badge-pending px-3 py-2 rounded-pill">
+                            <i class="bi bi-hourglass-split me-1"></i> Awaiting Teacher Response
+                        </span>
+                    {% endif %}
+                </div>
+                <span class="text-muted small">
+                    <i class="bi bi-clock me-1"></i> {{ doubt.created_at|date:"M d, Y - h:i A" }}
+                </span>
+            </div>
+
+            <h3 class="fw-bold text-dark mb-3">{{ doubt.title }}</h3>
+
+            <div class="p-3 bg-light rounded-3 mb-4 text-dark lh-base" style="white-space: pre-line;">
+                {{ doubt.description }}
+            </div>
+
+            <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+                <i class="bi bi-person-circle fs-5 text-primary"></i>
+                <span>Asked by <strong class="text-dark">{{ doubt.student.full_name }}</strong> (Roll: <code>{{ doubt.student.roll_number }}</code>)</span>
+            </div>
+        </div>
+
+        <!-- Teacher Responses Section -->
+        <div class="mb-4">
+            <h4 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-chat-left-quote-fill text-success"></i>
+                Teacher Responses ({{ responses.count }})
+            </h4>
+
+            {% if responses %}
+                <div class="d-flex flex-column gap-3">
+                    {% for resp in responses %}
+                        <div class="card p-4 response-bubble bg-white shadow-sm border-0">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                                        <i class="bi bi-person-check-fill"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">{{ resp.teacher.full_name }}</h6>
+                                        <small class="text-muted">Teacher ID: {{ resp.teacher.roll_number }} &bull; {{ doubt.subject.name }}</small>
+                                    </div>
+                                </div>
+                                <span class="text-muted small">
+                                    <i class="bi bi-clock me-1"></i> {{ resp.created_at|date:"M d, Y - h:i A" }}
+                                </span>
+                            </div>
+                            <div class="p-3 bg-white rounded-3 border border-success-subtle text-dark lh-base mt-2" style="white-space: pre-line;">
+                                {{ resp.response_text }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card p-4 text-center bg-white border-0 shadow-sm">
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-info-circle me-1"></i> No response has been posted by the teacher yet. Please check back soon!
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Form for Teacher to Respond -->
+        {% if can_respond %}
+            <div class="card p-4 p-md-5 border-0 shadow-sm bg-white" id="response-form">
+                <h4 class="fw-bold mb-2">
+                    <i class="bi bi-pencil-square text-warning me-2"></i>Provide Your Response as Faculty
+                </h4>
+                <p class="text-muted small mb-4">
+                    Your response will be visible to student <strong>{{ doubt.student.full_name }}</strong> and will mark this doubt as answered.
+                </p>
+
+                <form method="post" action="{% url 'teacher_doubt_detail' doubt.id %}" novalidate>
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ response_form.response_text }}
+                        {% if response_form.response_text.errors %}
+                            <div class="text-danger small mt-1">{{ response_form.response_text.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-success px-4 py-2 rounded-pill fw-semibold shadow-sm">
+                            <i class="bi bi-send-check-fill me-1"></i> Submit Answer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

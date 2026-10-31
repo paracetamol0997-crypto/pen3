@@ -1,0 +1,224 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Student Doubt Portal{% endblock %}</title>
+    <!-- Local Bootstrap 5 CSS (Works 100% Offline) -->
+    <link href="{% static 'portal/css/bootstrap.min.css' %}" rel="stylesheet">
+    <!-- Local Bootstrap Icons (Works 100% Offline) -->
+    <link rel="stylesheet" href="{% static 'portal/css/bootstrap-icons.min.css' %}">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg-soft: #f8fafc;
+        }
+        body {
+            background-color: var(--bg-soft);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .navbar-brand span {
+            color: #38bdf8;
+        }
+        .main-content {
+            flex: 1;
+        }
+        .card {
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+        }
+        .stat-card {
+            transition: transform 0.15s ease-in-out;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .badge-student {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            font-weight: 600;
+        }
+        .badge-teacher {
+            background-color: #fef3c7;
+            color: #b45309;
+            font-weight: 600;
+        }
+        .badge-pending {
+            background-color: #fff7ed;
+            color: #c2410c;
+            border: 1px solid #fed7aa;
+        }
+        .badge-answered {
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+        .doubt-bubble {
+            background: #ffffff;
+            border-left: 4px solid var(--primary-color);
+        }
+        .response-bubble {
+            background: #f0fdf4;
+            border-left: 4px solid #10b981;
+        }
+        footer {
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm py-2">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'index' %}">
+                <i class="bi bi-mortarboard-fill text-primary fs-4"></i>
+                <span>Doubt<span>Desk</span></span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {% if user.is_authenticated %}
+                        {% if user.role == 'student' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'student_dashboard' %}">
+                                    <i class="bi bi-grid-fill me-1"></i> My Doubts
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-warning fw-semibold" href="{% url 'ask_doubt' %}">
+                                    <i class="bi bi-patch-question-fill me-1"></i> Ask a Doubt
+                                </a>
+                            </li>
+                        {% elif user.role == 'teacher' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'teacher_dashboard' %}">
+                                    <i class="bi bi-journal-check me-1"></i> Student Doubts ({{ user.subject.name|default:"All" }})
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+
+                <ul class="navbar-nav ms-auto align-items-center gap-2">
+                    {% if user.is_authenticated %}
+                        <!-- Side-by-side Tab Switcher Button -->
+                        {% if user.role == 'student' %}
+                            <li class="nav-item">
+                                <a href="{% url 'teacher_dashboard' %}" target="_blank" class="btn btn-outline-warning btn-sm rounded-pill px-3">
+                                    <i class="bi bi-person-workspace me-1"></i> Open Teacher Tab
+                                </a>
+                            </li>
+                        {% elif user.role == 'teacher' %}
+                            <li class="nav-item">
+                                <a href="{% url 'student_dashboard' %}" target="_blank" class="btn btn-outline-info btn-sm rounded-pill px-3">
+                                    <i class="bi bi-mortarboard me-1"></i> Open Student Tab
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="nav-item">
+                            <span class="badge {% if user.role == 'student' %}badge-student{% else %}badge-teacher{% endif %} px-3 py-2 rounded-pill">
+                                <i class="bi {% if user.role == 'student' %}bi-person-badge{% else %}bi-person-video3{% endif %} me-1"></i>
+                                {{ user.full_name }} ({{ user.roll_number }})
+                                {% if user.role == 'teacher' and user.subject %}
+                                    - {{ user.subject.name }}
+                                {% endif %}
+                            </span>
+                        </li>
+                        <li class="nav-item">
+                            {% if user.role == 'student' %}
+                                <a href="{% url 'student_logout' %}" class="btn btn-outline-light btn-sm px-3 rounded-pill">
+                                    <i class="bi bi-box-arrow-right me-1"></i> Logout
+                                </a>
+                            {% else %}
+                                <a href="{% url 'teacher_logout' %}" class="btn btn-outline-light btn-sm px-3 rounded-pill">
+                                    <i class="bi bi-box-arrow-right me-1"></i> Logout
+                                </a>
+                            {% endif %}
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'student_login' %}">
+                                <i class="bi bi-mortarboard me-1"></i> Student Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-warning" href="{% url 'teacher_login' %}">
+                                <i class="bi bi-person-workspace me-1"></i> Teacher Login
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="btn btn-primary btn-sm dropdown-toggle rounded-pill px-3" href="#" role="button" data-bs-toggle="dropdown">
+                                Register
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow">
+                                <li>
+                                    <a class="dropdown-item py-2" href="{% url 'student_register' %}">
+                                        <i class="bi bi-mortarboard me-2 text-primary"></i> As Student
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2" href="{% url 'teacher_register' %}">
+                                        <i class="bi bi-person-workspace me-2 text-warning"></i> As Teacher
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container mt-3">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+                    {% if message.tags == 'success' %}
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                    {% elif message.tags == 'error' or message.tags == 'danger' %}
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {% else %}
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                    {% endif %}
+                    {{ message|safe }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content container py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-3 text-center text-muted small mt-auto">
+        <div class="container">
+            <span>&copy; 2026 DoubtDesk &bull; Simple & Fast Student Doubt Clearing System</span>
+        </div>
+    </footer>
+
+    <!-- Local Bootstrap 5 Bundle JS (Works 100% Offline) -->
+    <script src="{% static 'portal/js/bootstrap.bundle.min.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

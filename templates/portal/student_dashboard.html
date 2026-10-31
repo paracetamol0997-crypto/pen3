@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - DoubtDesk{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Hello, {{ user.full_name }}! 👋</h2>
+        <p class="text-muted mb-0">Roll Number: <span class="fw-semibold text-dark">{{ user.roll_number }}</span> &bull; Manage your questions and teacher answers</p>
+    </div>
+    <div>
+        <a href="{% url 'ask_doubt' %}" class="btn btn-primary px-4 py-2 rounded-pill shadow-sm fw-semibold">
+            <i class="bi bi-patch-question-fill me-1"></i> Ask a New Doubt
+        </a>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card p-3 bg-white">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Total Doubts</span>
+                    <h3 class="fw-bold mb-0 text-dark">{{ stats.total }}</h3>
+                </div>
+                <div class="bg-primary-subtle text-primary p-3 rounded-circle fs-4">
+                    <i class="bi bi-question-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card p-3 bg-white">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Pending Answer</span>
+                    <h3 class="fw-bold mb-0 text-warning-emphasis">{{ stats.pending }}</h3>
+                </div>
+                <div class="bg-warning-subtle text-warning-emphasis p-3 rounded-circle fs-4">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card p-3 bg-white">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Answered</span>
+                    <h3 class="fw-bold mb-0 text-success">{{ stats.answered }}</h3>
+                </div>
+                <div class="bg-success-subtle text-success p-3 rounded-circle fs-4">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card p-3 mb-4 bg-white">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-1">Filter by Status</label>
+            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending Response</option>
+                <option value="answered" {% if selected_status == 'answered' %}selected{% endif %}>Answered</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-1">Filter by Subject</label>
+            <select name="subject" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">All Subjects</option>
+                {% for sub in subjects %}
+                    <option value="{{ sub.id }}" {% if selected_subject == sub.id|stringformat:"s" %}selected{% endif %}>
+                        {{ sub.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+            {% if selected_status or selected_subject %}
+                <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill w-100">
+                    <i class="bi bi-x-circle me-1"></i> Clear Filters
+                </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Doubts List -->
+<h4 class="fw-bold mb-3">Your Doubts</h4>
+{% if doubts %}
+    <div class="row g-3">
+        {% for doubt in doubts %}
+            <div class="col-12">
+                <div class="card p-3 p-md-4 doubt-bubble bg-white">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-2 mb-2">
+                        <div>
+                            <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 rounded-pill me-2">
+                                <i class="bi bi-journal-bookmark me-1"></i>{{ doubt.subject.name }}
+                            </span>
+                            {% if doubt.status == 'answered' %}
+                                <span class="badge badge-answered px-2 py-1 rounded-pill">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Answered
+                                </span>
+                            {% else %}
+                                <span class="badge badge-pending px-2 py-1 rounded-pill">
+                                    <i class="bi bi-clock-history me-1"></i> Pending Teacher's Reply
+                                </span>
+                            {% endif %}
+                        </div>
+                        <span class="text-muted small">
+                            <i class="bi bi-calendar-event me-1"></i> {{ doubt.created_at|date:"M d, Y - h:i A" }}
+                        </span>
+                    </div>
+
+                    <h5 class="fw-bold mb-2">
+                        <a href="{% url 'student_doubt_detail' doubt.id %}" class="text-dark text-decoration-none">
+                            {{ doubt.title }}
+                        </a>
+                    </h5>
+                    <p class="text-secondary small mb-3 text-truncate-2">
+                        {{ doubt.description|linebreaksbr|truncatewords:40 }}
+                    </p>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <span class="text-muted small">
+                            <i class="bi bi-chat-left-text me-1"></i>
+                            {% with count=doubt.responses.count %}
+                                {{ count }} Response{{ count|pluralize }}
+                            {% endwith %}
+                        </span>
+                        <a href="{% url 'student_doubt_detail' doubt.id %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                            View Discussion <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card p-5 text-center bg-white">
+        <div class="py-4">
+            <i class="bi bi-chat-square-dots text-muted display-4 mb-3 d-block"></i>
+            <h5 class="fw-bold text-dark">No doubts found!</h5>
+            <p class="text-muted small mb-3">You haven't posted any doubt yet (or none matching the selected filter).</p>
+            <a href="{% url 'ask_doubt' %}" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-plus-circle me-1"></i> Ask Your First Doubt
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+{% endblock %}

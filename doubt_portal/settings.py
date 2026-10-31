@@ -2,16 +2,18 @@
 Django settings for doubt_portal project.
 """
 
+import os
 from pathlib import Path
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-co6ra_21j46&!@h@w^wnb%66-7wp#%i6mim*c5*b6%xvxr(r!q'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-co6ra_21j46&!@h@w^wnb%66-7wp#%i6mim*c5*b6%xvxr(r!q')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
@@ -57,17 +59,19 @@ TEMPLATES = [
 WSGI_APPLICATION = 'doubt_portal.wsgi.application'
 
 # Database
+# If DATABASE_URL is provided (e.g. Neon, Supabase, Railway PostgreSQL), use it.
+# Otherwise, fall back to local SQLite.
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600
+    )
 }
 
 # Custom User Model
 AUTH_USER_MODEL = 'portal.User'
 
-# Password validation - Keep it simple as requested by user
+# Password validation - Keep it simple as requested
 AUTH_PASSWORD_VALIDATORS = []
 
 # Internationalization
@@ -81,8 +85,8 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-LOGIN_URL = 'login'
+LOGIN_URL = 'student_login'
 LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = 'student_login'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
